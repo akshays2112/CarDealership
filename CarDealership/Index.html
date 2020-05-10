@@ -1,0 +1,2283 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Star Cars</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout-validation/2.0.3/knockout.validation.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sammy.js/0.7.6/sammy.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            function toggleSPAPage(SPAPageName, targetElementID) {
+                ko.cleanNode(document.getElementById('main'));
+                $('#' + targetElementID).html($('#' + SPAPageName).html());
+                $('.showActionsAfterLoad').hide();
+                eval(SPAPageName + '();');
+            }
+
+            function Car(item) {
+                var self = this;
+                if (item) {
+                    self.carStockID = ko.observable(item.ID);
+                    self.carStockName = ko.observable(item.Name).extend({ required: true });
+                    self.carStockPrice = ko.observable(item.Price).extend({ required: true, number: true });
+                    self.carStockQuantity = ko.observable(item.Quantity).extend({ required: true, number: true, min: 1, max: 100000000 });
+                    self.carStockImage = ko.observable(item.Image);
+                } else {
+                    self.carStockID = ko.observable();
+                    self.carStockName = ko.observable().extend({ required: true });
+                    self.carStockPrice = ko.observable().extend({ required: true, number: true, min: 1 });
+                    self.carStockQuantity = ko.observable().extend({ required: true, number: true, min: 1, max: 100000000 });
+                    self.carStockImage = ko.observable('');
+                }
+                self.errors = ko.validation.group(self);
+                self.carStockFileUpload = function (data, e) {
+                    var file = e.target.files[0];
+                    var reader = new FileReader();
+                    reader.onloadend = function (onloadend_e) {
+                        var result = reader.result;
+                        self.carStockImage(result);
+                    };
+                    if (file) {
+                        reader.readAsDataURL(file);
+                    }
+                };
+            }
+
+            function Salesman(item) {
+                var self = this;
+                if (item) {
+                    self.salesmanID = ko.observable(item.ID);
+                    self.salesmanName = ko.observable(item.Name).extend({ required: true });
+                    self.salesmanCellNumber = ko.observable(item.CellNumber).extend({ required: true, number: true });
+                    self.salesmanEmailAddress = ko.observable(item.EmailAddress).extend({ required: true, email: true });
+                    self.salesmanCommissionPercentage = ko.observable(item.CommissionPercentage).extend({ required: true, number: true, min: 0, max: 100 });
+                    self.salesmanJoined = ko.observable(item.Joined.split('T')[0]).extend({ required: true });;
+                    self.salesmanResigned = ko.observable(item.Resigned.split('T')[0]).extend({ ResignedDateMustBeGreaterThanJoinedDate: self.salesmanID() });
+                } else {
+                    self.salesmanID = ko.observable();
+                    self.salesmanName = ko.observable().extend({ required: true });
+                    self.salesmanCellNumber = ko.observable().extend({ required: true, number: true });
+                    self.salesmanEmailAddress = ko.observable().extend({ required: true, email: true });
+                    self.salesmanCommissionPercentage = ko.observable().extend({ required: true, number: true, min: 1, max: 100 });
+                    var today = new Date();
+                    self.salesmanJoined = ko.observable(today.getFullYear() + '-' + (today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth() + 1) + '-' + (today.getDate() < 10 ? '0' + today.getDate() : today.getDate())).extend({ required: true });
+                    self.salesmanResigned = ko.observable('2200-12-30').extend({ ResignedDateMustBeGreaterThanJoinedDate: 9999 });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function Customer(item) {
+                var self = this;
+                if (item) {
+                    self.customerID = ko.observable(item.ID);
+                    self.customerName = ko.observable(item.Name).extend({ required: true });
+                    self.customerAddress = ko.observable(item.Address).extend({ required: true });
+                    self.customerCity = ko.observable(item.City).extend({ required: true });
+                    self.customerState = ko.observable(item.State).extend({ required: true });
+                    self.customerCountry = ko.observable(item.Country).extend({ required: true });
+                    self.customerZipCode = ko.observable(item.ZipCode).extend({ required: true });
+                    self.customerCellNumber = ko.observable(item.CellNumber).extend({ number: true });
+                    self.customerEmailAddress = ko.observable(item.EmailAddress).extend({ email: true });
+                    self.customerAddedOn = ko.observable(item.AddedOn.split('T')[0]).extend({ required: true, });
+                } else {
+                    self.customerID = ko.observable();
+                    self.customerName = ko.observable().extend({ required: true });
+                    self.customerAddress = ko.observable().extend({ required: true });
+                    self.customerCity = ko.observable().extend({ required: true });
+                    self.customerState = ko.observable().extend({ required: true });
+                    self.customerCountry = ko.observable().extend({ required: true });
+                    self.customerZipCode = ko.observable().extend({ required: true });
+                    self.customerCellNumber = ko.observable().extend({ number: true });
+                    self.customerEmailAddress = ko.observable().extend({ email: true });
+                    var today = new Date();
+                    self.customerAddedOn = ko.observable(today.getFullYear() + '-' + (today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth() + 1) + '-' + (today.getDate() < 10 ? '0' + today.getDate() : today.getDate())).extend({ required: true });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function Sale(item) {
+                var self = this;
+                if (item) {
+                    self.saleID = ko.observable(item.ID);
+                    self.saleSalesmanID = ko.observable(item.SalesmanID).extend({ required: true });
+                    self.saleCustomerID = ko.observable(item.CustomerID).extend({ required: true });
+                    self.saleCarID = ko.observable(item.CarID).extend({ required: true });
+                    self.salePrice = ko.observable(item.Price).extend({ required: true, number: true });
+                    self.saleSaleDate = ko.observable(item.SaleDate.split('T')[0]).extend({ required: true });
+                } else {
+                    self.saleID = ko.observable();
+                    self.saleSalesmanID = ko.observable().extend({ required: true });
+                    self.saleCustomerID = ko.observable().extend({ required: true });
+                    self.saleCarID = ko.observable().extend({ required: true });
+                    self.salePrice = ko.observable().extend({ required: true, number: true });
+                    var today = new Date();
+                    self.saleSaleDate = ko.observable(today.getFullYear() + '-' + (today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth() + 1) + '-' + (today.getDate() < 10 ? '0' + today.getDate() : today.getDate())).extend({ required: true });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function AccessoryCategory(item) {
+                var self = this;
+                if (item) {
+                    self.categoryID = ko.observable(item.ID);
+                    self.categoryName = ko.observable(item.Name).extend({ required: true });
+                } else {
+                    self.categoryID = ko.observable();
+                    self.categoryName = ko.observable().extend({ required: true });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function Accessory(item) {
+                var self = this;
+                if (item) {
+                    self.accessoryID = ko.observable(item.ID);
+                    self.accessoryName = ko.observable(item.Name);
+                    self.accessoryCategoryID = ko.observable(item.AccessoryCategoryID).extend({ required: true });
+                    self.accessoryGroupName = ko.observable(item.GroupName);
+                    self.accessoryPrice = ko.observable(item.Price).extend({ required: true, number: true });
+                } else {
+                    self.accessoryID = ko.observable();
+                    self.accessoryName = ko.observable();
+                    self.accessoryCategoryID = ko.observable().extend({ required: true });
+                    self.accessoryGroupName = ko.observable();
+                    self.accessoryPrice = ko.observable().extend({ required: true, number: true });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function SaleAccessory(item) {
+                var self = this;
+                if (item) {
+                    self.saleAccessoryID = ko.observable(item.ID);
+                    self.saleAccessorySaleID = ko.observable(item.SaleID).extend({ required: true });
+                    self.saleAccessoryAccessoryID = ko.observable(item.AccessoryID).extend({ required: true });
+                    self.saleAccessoryPrice = ko.observable(item.Price).extend({ required: true, number: true });
+                } else {
+                    self.saleAccessoryID = ko.observable();
+                    self.saleAccessorySaleID = ko.observable().extend({ required: true });
+                    self.saleAccessoryAccessoryID = ko.observable().extend({ required: true });
+                    self.saleAccessoryPrice = ko.observable().extend({ required: true, number: true });
+                }
+                self.errors = ko.validation.group(self);
+            }
+
+            function HomePage() {
+            }
+
+            function CarStockPage() {
+                function CarStockViewModel() {
+                    var self = this;
+                    self.carStockAvailableCars = ko.observableArray();
+                    self.carStockPageSize = ko.observable(5);
+                    self.carStockPageIndex = ko.observable(0);
+                    self.carStockSelectedItem = ko.observable();
+                    self.carStockOldItem = {};
+                    self.carStockPagedList = ko.dependentObservable(function () {
+                        var size = self.carStockPageSize();
+                        var start = self.carStockPageIndex() * size;
+                        return self.carStockAvailableCars.slice(start, start + size);
+                    });
+                    self.carStockMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.carStockAvailableCars().length / self.carStockPageSize()) - 1;
+                    });
+                    self.carStockAllPages = ko.dependentObservable(function () {
+                        var carStockPages = [];
+                        for (i = 0; i <= self.carStockMaxPageIndex() ; i++) {
+                            carStockPages.push({ carStockPageNumber: (i + 1) });
+                        }
+                        return carStockPages;
+                    });
+                    self.carStockIncreasePrices = function () {
+                        for (var i = 0; i < self.carStockAvailableCars().length; i++) {
+                            self.carStockAvailableCars()[i].carStockPrice((self.carStockAvailableCars()[i].carStockPrice() * 1.1).toFixed(2));
+                        }
+                    };
+                    self.carStockEdit = function (item) {
+                        item.carStockCurrentTemplate = 'carStockEditTemplate';
+                        self.carStockOldItem.Name = item.carStockName();
+                        self.carStockOldItem.Price = item.carStockPrice();
+                        self.carStockOldItem.Quantity = item.carStockQuantity();
+                        self.carStockOldItem.Image = item.carStockImage();
+                        self.carStockSelectedItem(item);
+                    };
+                    self.carStockCancelEdit = function (item) {
+                        self.carStockSelectedItem().carStockCurrentTemplate = 'carStockShowTemplate';
+                        self.carStockSelectedItem().carStockName(self.carStockOldItem.Name);
+                        self.carStockSelectedItem().carStockPrice(self.carStockOldItem.Price);
+                        self.carStockSelectedItem().carStockQuantity(self.carStockOldItem.Quantity);
+                        self.carStockSelectedItem().carStockImage(self.carStockOldItem.Image);
+                        self.carStockOldItem = {};
+                        self.carStockSelectedItem(null);
+                    };
+                    self.carStockCancelAdd = function (item) {
+                        self.carStockSelectedItem().carStockCurrentTemplate = 'carStockShowTemplate';
+                        self.carStockSelectedItem(null);
+                        self.carStockAvailableCars.remove(item);
+                    };
+                    self.carStockAdd = function () {
+                        var newItem = new Car();
+                        newItem.carStockID(9999);
+                        newItem.carStockImage('');
+                        newItem.carStockCurrentTemplate = 'carStockAddTemplate';
+                        self.carStockAvailableCars.push(newItem);
+                        self.carStockSelectedItem(newItem);
+                        self.carStockMoveToPage(self.carStockMaxPageIndex());
+                    };
+                    self.carStockRemove = function (item) {
+                        if (item.carStockID()) {
+                            if (confirm('Are you sure you wish to delete this car?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/Cars/' + item.carStockID(), success:
+                                        function (result) {
+                                            self.carStockAvailableCars.remove(item);
+                                            if (self.carStockPageIndex() > self.carStockMaxPageIndex()) {
+                                                self.carStockMoveToPage(self.carStockMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.carStockAvailableCars.remove(item);
+                            if (self.carStockPageIndex() > self.carStockMaxPageIndex()) {
+                                self.carStockMoveToPage(self.carStockMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.carStockSaveAdd = function () {
+                        if (self.carStockSelectedItem().errors().length === 0) {
+                            var item = self.carStockSelectedItem();
+                            var dataItem = {
+                                ID: item.carStockID(), Name: item.carStockName(), Price: item.carStockPrice(),
+                                Quantity: item.carStockQuantity(), Image: item.carStockImage()
+                            };
+                            $.post('/api/Cars', dataItem, function (result) {
+                                item.carStockID(result.ID);
+                                item.carStockCurrentTemplate = null;
+                                self.carStockSelectedItem(null);
+                            });
+                        } else {
+                            self.carStockSelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.carStockSaveEdit = function () {
+                        if (self.carStockSelectedItem().errors().length === 0) {
+                            var item = self.carStockSelectedItem();
+                            var dataItem = {
+                                ID: item.carStockID(), Name: item.carStockName(), Price: item.carStockPrice(),
+                                Quantity: item.carStockQuantity(), Image: item.carStockImage()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/Cars/' + item.carStockID(), data: dataItem,
+                                contentType: "application/x-www-form-urlencoded;charset=UTF-8", success:
+                                    function (result) {
+                                        item.carStockCurrentTemplate = 'carStockShowTemplate';
+                                        self.carStockSelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.carStockSelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.carStockTemplateToUse = function (item) {
+                        return self.carStockSelectedItem() === item && item.carStockCurrentTemplate === 'carStockEditTemplate' ? 'carStockEditTemplate' :
+                            self.carStockSelectedItem() === item && item.carStockCurrentTemplate === 'carStockAddTemplate' ? 'carStockAddTemplate' : 'carStockShowTemplate';
+                    };
+                    self.carStockPreviousPage = function () {
+                        if (self.carStockPageIndex() > 0) {
+                            self.carStockPageIndex(self.carStockPageIndex() - 1);
+                        }
+                    };
+                    self.carStockNextPage = function () {
+                        if (self.carStockPageIndex() < self.carStockMaxPageIndex()) {
+                            self.carStockPageIndex(self.carStockPageIndex() + 1);
+                        }
+                    };
+                    self.carStockMoveToPage = function (index) {
+                        self.carStockPageIndex(index);
+                    };
+                    $.get('/api/Cars', function (data, status) {
+                        self.carStockAvailableCars($.map(data, function (item) {
+                            return new Car(item);
+                        }));
+                        $('.showActionsAfterLoad').show();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var carStockViewModel = new CarStockViewModel();
+
+                ko.applyBindings(carStockViewModel, document.getElementById('main'));
+            }
+
+            function SalesmanPage() {
+                function SalesmanViewModel() {
+                    var self = this;
+                    self.salesmen = ko.observableArray();
+                    self.salesmanPageSize = ko.observable(5);
+                    self.salesmanPageIndex = ko.observable(0);
+                    self.salesmanSelectedItem = ko.observable();
+                    self.salesmanOldItem = {};
+                    self.salesmanPagedList = ko.dependentObservable(function () {
+                        var size = self.salesmanPageSize();
+                        var start = self.salesmanPageIndex() * size;
+                        return self.salesmen.slice(start, start + size);
+                    });
+                    self.salesmanMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.salesmen().length / self.salesmanPageSize()) - 1;
+                    });
+                    self.salesmanAllPages = ko.dependentObservable(function () {
+                        var salesmanPages = [];
+                        for (i = 0; i <= self.salesmanMaxPageIndex() ; i++) {
+                            salesmanPages.push({ salesmanPageNumber: (i + 1) });
+                        }
+                        return salesmanPages;
+                    });
+                    self.salesmanEdit = function (item) {
+                        item.salesmanCurrentTemplate = 'salesmanEditTemplate';
+                        self.salesmanOldItem.Name = item.salesmanName();
+                        self.salesmanOldItem.CellNumber = item.salesmanCellNumber();
+                        self.salesmanOldItem.EmailAddress = item.salesmanEmailAddress();
+                        self.salesmanOldItem.CommissionPercentage = item.salesmanCommissionPercentage();
+                        self.salesmanOldItem.Joined = item.salesmanJoined();
+                        self.salesmanOldItem.Resigned = item.salesmanResigned();
+                        self.salesmanSelectedItem(item);
+                    };
+                    self.salesmanCancelEdit = function (item) {
+                        self.salesmanSelectedItem().salesmanCurrentTemplate = 'salesmanShowTemplate';
+                        self.salesmanSelectedItem().salesmanName(self.salesmanOldItem.Name);
+                        self.salesmanSelectedItem().salesmanCellNumber(self.salesmanOldItem.CellNumber);
+                        self.salesmanSelectedItem().salesmanEmailAddress(self.salesmanOldItem.EmailAddress);
+                        self.salesmanSelectedItem().salesmanCommissionPercentage(self.salesmanOldItem.CommissionPercentage);
+                        self.salesmanSelectedItem().salesmanJoined(self.salesmanOldItem.Joined);
+                        self.salesmanSelectedItem().salesmanResigned(self.salesmanOldItem.Resigned);
+                        self.salesmanOldItem = {};
+                        self.salesmanSelectedItem(null);
+                    };
+                    self.salesmanCancelAdd = function (item) {
+                        self.salesmanSelectedItem().salesmanCurrentTemplate = 'salesmanShowTemplate';
+                        self.salesmanSelectedItem(null);
+                        self.salesmen.remove(item);
+                    };
+                    self.salesmanAdd = function () {
+                        var newItem = new Salesman();
+                        newItem.salesmanID(9999);
+                        newItem.salesmanCurrentTemplate = 'salesmanAddTemplate';
+                        self.salesmen.push(newItem);
+                        self.salesmanSelectedItem(newItem);
+                        self.salesmanMoveToPage(self.salesmanMaxPageIndex());
+                    };
+                    self.salesmanRemove = function (item) {
+                        if (item.salesmanID()) {
+                            if (confirm('Are you sure you wish to delete this salesman?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/Salesmen/' + item.salesmanID(), success:
+                                        function (result) {
+                                            self.salesmen.remove(item);
+                                            if (self.salesmanPageIndex() > self.salesmanMaxPageIndex()) {
+                                                self.salesmanMoveToPage(self.salesmanMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.salesmen.remove(item);
+                            if (self.salesmanPageIndex() > self.salesmanMaxPageIndex()) {
+                                self.salesmanMoveToPage(self.salesmanMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.salesmanSaveAdd = function () {
+                        if (self.salesmanSelectedItem().errors().length === 0) {
+                            var item = self.salesmanSelectedItem();
+                            var dataItem = {
+                                ID: item.salesmanID(), Name: item.salesmanName(), CellNumber: item.salesmanCellNumber(),
+                                EmailAddress: item.salesmanEmailAddress(), CommissionPercentage: item.salesmanCommissionPercentage(),
+                                Joined: item.salesmanJoined(), Resigned: item.salesmanResigned()
+                            };
+                            $.post('/api/Salesmen', dataItem, function (result) {
+                                item.salesmanID(result.ID);
+                                item.salesmanCommissionPercentage(result.CommissionPercentage);
+                                item.salesmanCurrentTemplate = null;
+                                self.salesmanSelectedItem(null);
+                            });
+                        } else {
+                            self.salesmanSelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.salesmanSaveEdit = function () {
+                        if (self.salesmanSelectedItem().errors().length === 0) {
+                            var item = self.salesmanSelectedItem();
+                            var dataItem = {
+                                ID: item.salesmanID(), Name: item.salesmanName(), CellNumber: item.salesmanCellNumber(),
+                                EmailAddress: item.salesmanEmailAddress(), CommissionPercentage: item.salesmanCommissionPercentage(),
+                                Joined: item.salesmanJoined(), Resigned: item.salesmanResigned()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/Salesmen/' + item.salesmanID(), data: dataItem, success:
+                                    function (result) {
+                                        item.salesmanCurrentTemplate = 'salesmanShowTemplate';
+                                        self.salesmanSelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.salesmanSelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.salesmanTemplateToUse = function (item) {
+                        return self.salesmanSelectedItem() === item && item.salesmanCurrentTemplate === 'salesmanEditTemplate' ? 'salesmanEditTemplate' :
+                            self.salesmanSelectedItem() === item && item.salesmanCurrentTemplate === 'salesmanAddTemplate' ? 'salesmanAddTemplate' : 'salesmanShowTemplate';
+                    };
+                    self.salesmanPreviousPage = function () {
+                        if (self.salesmanPageIndex() > 0) {
+                            self.salesmanPageIndex(self.salesmanPageIndex() - 1);
+                        }
+                    };
+                    self.salesmanNextPage = function () {
+                        if (self.salesmanPageIndex() < self.salesmanMaxPageIndex()) {
+                            self.salesmanPageIndex(self.salesmanPageIndex() + 1);
+                        }
+                    };
+                    self.salesmanMoveToPage = function (index) {
+                        self.salesmanPageIndex(index);
+                    };
+
+                    $.get('/api/Salesmen', function (data, status) {
+                        self.salesmen($.map(data, function (item) {
+                            return new Salesman(item);
+                        }));
+                        $('.showActionsAfterLoad').show();
+                    });
+                }
+
+                var salesmanViewModel = new SalesmanViewModel();
+
+                ko.validation.rules['ResignedDateMustBeGreaterThanJoinedDate'] = {
+                    validator: function (val, id) {
+                        var salesmen = salesmanViewModel.salesmen();
+                        for (var i = 0; i < salesmen.length; i++) {
+                            if (salesmen[i].salesmanID() == id) {
+                                return salesmen[i].salesmanResigned() > salesmen[i].salesmanJoined();
+                            }
+                        }
+                        return id == '9999' ? true : false;
+                    },
+                    message: 'The Resigned date must be greater than the Joined date.'
+                };
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                ko.applyBindings(salesmanViewModel, document.getElementById('main'));
+            }
+
+            function CustomerPage() {
+                function CustomerViewModel() {
+                    var self = this;
+                    self.customers = ko.observableArray();
+                    self.customerPageSize = ko.observable(5);
+                    self.customerPageIndex = ko.observable(0);
+                    self.customerSelectedItem = ko.observable();
+                    self.customerOldItem = {};
+                    self.customerPagedList = ko.dependentObservable(function () {
+                        var size = self.customerPageSize();
+                        var start = self.customerPageIndex() * size;
+                        return self.customers.slice(start, start + size);
+                    });
+                    self.customerMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.customers().length / self.customerPageSize()) - 1;
+                    });
+                    self.customerAllPages = ko.dependentObservable(function () {
+                        var customerPages = [];
+                        for (i = 0; i <= self.customerMaxPageIndex() ; i++) {
+                            customerPages.push({ customerPageNumber: (i + 1) });
+                        }
+                        return customerPages;
+                    });
+                    self.customerEdit = function (item) {
+                        item.customerCurrentTemplate = 'customerEditTemplate';
+                        self.customerOldItem.Name = item.customerName();
+                        self.customerOldItem.Address = item.customerAddress();
+                        self.customerOldItem.City = item.customerCity();
+                        self.customerOldItem.State = item.customerState();
+                        self.customerOldItem.Country = item.customerCountry();
+                        self.customerOldItem.ZipCode = item.customerZipCode();
+                        self.customerOldItem.CellNumber = item.customerCellNumber();
+                        self.customerOldItem.EmailAddress = item.customerEmailAddress();
+                        self.customerOldItem.AddedOn = item.customerAddedOn();
+                        self.customerSelectedItem(item);
+                    };
+                    self.customerCancelEdit = function (item) {
+                        self.customerSelectedItem().customerCurrentTemplate = 'customerShowTemplate';
+                        self.customerSelectedItem().customerName(self.customerOldItem.Name);
+                        self.customerSelectedItem().customerAddress(self.customerOldItem.Address);
+                        self.customerSelectedItem().customerCity(self.customerOldItem.City);
+                        self.customerSelectedItem().customerState(self.customerOldItem.State);
+                        self.customerSelectedItem().customerCountry(self.customerOldItem.Country);
+                        self.customerSelectedItem().customerZipCode(self.customerOldItem.ZipCode);
+                        self.customerSelectedItem().customerCellNumber(self.customerOldItem.CellNumber);
+                        self.customerSelectedItem().customerEmailAddress(self.customerOldItem.EmailAddress);
+                        self.customerSelectedItem().customerAddedOn(self.customerOldItem.AddedOn);
+                        self.customerOldItem = {};
+                        self.customerSelectedItem(null);
+                    };
+                    self.customerCancelAdd = function (item) {
+                        self.customerSelectedItem().customerCurrentTemplate = 'customerShowTemplate';
+                        self.customerSelectedItem(null);
+                        self.customers.remove(item);
+                    };
+                    self.customerAdd = function () {
+                        var newItem = new Customer();
+                        newItem.customerID(9999);
+                        newItem.customerCurrentTemplate = 'customerAddTemplate';
+                        self.customers.push(newItem);
+                        self.customerSelectedItem(newItem);
+                        self.customerMoveToPage(self.customerMaxPageIndex());
+                    };
+                    self.customerRemove = function (item) {
+                        if (item.customerID()) {
+                            if (confirm('Are you sure you wish to delete this customer?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/Customers/' + item.customerID(), success:
+                                        function (result) {
+                                            self.customers.remove(item);
+                                            if (self.customerPageIndex() > self.customerMaxPageIndex()) {
+                                                self.customerMoveToPage(self.customerMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.customers.remove(item);
+                            if (self.customerPageIndex() > self.customerMaxPageIndex()) {
+                                self.customerMoveToPage(self.customerMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.customerSaveAdd = function () {
+                        if (self.customerSelectedItem().errors().length === 0) {
+                            var item = self.customerSelectedItem();
+                            var dataItem = {
+                                ID: item.customerID(), Name: item.customerName(), Address: item.customerAddress(), City: item.customerCity(),
+                                State: item.customerState(), Country: item.customerCountry(), ZipCode: item.customerZipCode(), CellNumber: item.customerCellNumber(),
+                                EmailAddress: item.customerEmailAddress(), AddedOn: item.customerAddedOn()
+                            };
+                            $.post('/api/Customers', dataItem, function (result) {
+                                item.customerID(result.ID);
+                                item.customerCurrentTemplate = null;
+                                self.customerSelectedItem(null);
+                            });
+                        } else {
+                            self.customerSelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.customerSaveEdit = function () {
+                        if (self.customerSelectedItem().errors().length === 0) {
+                            var item = self.customerSelectedItem();
+                            var dataItem = {
+                                ID: item.customerID(), Name: item.customerName(), Address: item.customerAddress(), City: item.customerCity(),
+                                State: item.customerState(), Country: item.customerCountry(), ZipCode: item.customerZipCode(), CellNumber: item.customerCellNumber(),
+                                EmailAddress: item.customerEmailAddress(), AddedOn: item.customerAddedOn()
+                        };
+                            $.ajax({
+                                type: 'PUT', url: '/api/Customers/' + item.customerID(), data: dataItem, success:
+                                    function (result) {
+                                        item.customerCurrentTemplate = 'customerShowTemplate';
+                                        self.customerSelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.customerSelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.customerTemplateToUse = function (item) {
+                        return self.customerSelectedItem() === item && item.customerCurrentTemplate === 'customerEditTemplate' ? 'customerEditTemplate' :
+                            self.customerSelectedItem() === item && item.customerCurrentTemplate === 'customerAddTemplate' ? 'customerAddTemplate' : 'customerShowTemplate';
+                    };
+                    self.customerPreviousPage = function () {
+                        if (self.customerPageIndex() > 0) {
+                            self.customerPageIndex(self.customerPageIndex() - 1);
+                        }
+                    };
+                    self.customerNextPage = function () {
+                        if (self.customerPageIndex() < self.customerMaxPageIndex()) {
+                            self.customerPageIndex(self.customerPageIndex() + 1);
+                        }
+                    };
+                    self.customerMoveToPage = function (index) {
+                        self.customerPageIndex(index);
+                    };
+                    $.get('/api/Customers', function (data, status) {
+                        self.customers($.map(data, function (item) {
+                            return new Customer(item);
+                        }));
+                        $('.showActionsAfterLoad').show();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var customerViewModel = new CustomerViewModel();
+
+                ko.applyBindings(customerViewModel, document.getElementById('main'));
+            }
+
+            function SalesPage() {
+                function SalesViewModel() {
+                    var self = this;
+                    self.sales = ko.observableArray();
+                    self.saleSalesmen = ko.observableArray();
+                    self.saleCustomers = ko.observableArray();
+                    self.saleCars = ko.observableArray();
+                    self.salePageSize = ko.observable(5);
+                    self.salePageIndex = ko.observable(0);
+                    self.saleSelectedItem = ko.observable();
+                    self.saleOldItem = {};
+                    self.getSalesmanByID = function (salesmanID) {
+                        for (var i = 0; i < self.saleSalesmen().length; i++) {
+                            if (self.saleSalesmen()[i].salesmanID() == salesmanID()) {
+                                return self.saleSalesmen()[i];
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getCustomerByID = function (customerID) {
+                        for (var i = 0; i < self.saleCustomers().length; i++) {
+                            if (self.saleCustomers()[i].customerID() == customerID()) {
+                                return self.saleCustomers()[i];
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getCarByID = function (carID) {
+                        for (var i = 0; i < self.saleCars().length; i++) {
+                            if (self.saleCars()[i].carStockID() == carID()) {
+                                return self.saleCars()[i];
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getSalesmanDisplayValue = function (salesman) {
+                        return salesman.salesmanName() + ' [' + salesman.salesmanCellNumber() + ']';
+                    }
+                    self.getCustomerDispayValue = function (customer) {
+                        return customer.customerName() + ' [' + customer.customerCellNumber() + ', ' + customer.customerEmailAddress() + ']';
+                    }
+                    self.salePagedList = ko.dependentObservable(function () {
+                        var size = self.salePageSize();
+                        var start = self.salePageIndex() * size;
+                        return self.sales.slice(start, start + size);
+                    });
+                    self.saleMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.sales().length / self.salePageSize()) - 1;
+                    });
+                    self.saleAllPages = ko.dependentObservable(function () {
+                        var salePages = [];
+                        for (i = 0; i <= self.saleMaxPageIndex() ; i++) {
+                            salePages.push({ salePageNumber: (i + 1) });
+                        }
+                        return salePages;
+                    });
+                    self.saleEdit = function (item) {
+                        item.saleCurrentTemplate = 'saleEditTemplate';
+                        self.saleOldItem.SalesmanID = item.saleSalesmanID();
+                        self.saleOldItem.CustomerID = item.saleCustomerID();
+                        self.saleOldItem.CarID = item.saleCarID();
+                        self.saleOldItem.Price = item.salePrice();
+                        self.saleOldItem.SaleDate = item.saleSaleDate();
+                        self.saleSelectedItem(item);
+                    };
+                    self.saleCancelEdit = function (item) {
+                        self.saleSelectedItem().saleCurrentTemplate = 'saleShowTemplate';
+                        self.saleSelectedItem().saleSalesmanID(self.saleOldItem.SalesmanID);
+                        self.saleSelectedItem().saleCustomerID(self.saleOldItem.CustomerID);
+                        self.saleSelectedItem().saleCarID(self.saleOldItem.CarID);
+                        self.saleSelectedItem().salePrice(self.saleOldItem.Price);
+                        self.saleSelectedItem().saleSaleDate(self.saleOldItem.SaleDate);
+                        self.saleOldItem = {};
+                        self.saleSelectedItem(null);
+                    };
+                    self.saleCancelAdd = function (item) {
+                        self.saleSelectedItem().saleCurrentTemplate = 'saleShowTemplate';
+                        self.saleSelectedItem(null);
+                        self.sales.remove(item);
+                    };
+                    self.saleAdd = function () {
+                        var newItem = new Sale();
+                        newItem.saleID(9999);
+                        newItem.saleCurrentTemplate = 'saleAddTemplate';
+                        self.sales.push(newItem);
+                        self.saleSelectedItem(newItem);
+                        self.saleMoveToPage(self.saleMaxPageIndex());
+                    };
+                    self.saleRemove = function (item) {
+                        if (item.saleID()) {
+                            if (confirm('Are you sure you wish to delete this sale?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/Sales/' + item.saleID(), success:
+                                        function (result) {
+                                            self.sales.remove(item);
+                                            if (self.salePageIndex() > self.saleMaxPageIndex()) {
+                                                self.saleMoveToPage(self.saleMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.sales.remove(item);
+                            if (self.salePageIndex() > self.saleMaxPageIndex()) {
+                                self.saleMoveToPage(self.saleMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.saleSaveAdd = function () {
+                        if (self.saleSelectedItem().errors().length === 0) {
+                            var item = self.saleSelectedItem();
+                            var dataItem = {
+                                ID: item.saleID(), SalesmanID: item.saleSalesmanID(), CustomerID: item.saleCustomerID(),
+                                CarID: item.saleCarID(), Price: item.salePrice(), SaleDate: item.saleSaleDate()
+                            };
+                            $.post('/api/Sales', dataItem, function (result) {
+                                item.saleID(result.ID);
+                                item.saleCurrentTemplate = null;
+                                self.saleSelectedItem(null);
+                            });
+                        } else {
+                            self.saleSelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.saleSaveEdit = function () {
+                        if (self.saleSelectedItem().errors().length === 0) {
+                            var item = self.saleSelectedItem();
+                            var dataItem = {
+                                ID: item.saleID(), SalesmanID: item.saleSalesmanID(), CustomerID: item.saleCustomerID(),
+                                CarID: item.saleCarID(), Price: item.salePrice(), SaleDate: item.saleSaleDate()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/Sales/' + item.saleID() + '?oldCarID=' + self.saleOldItem.CarID, data: dataItem, success:
+                                    function (result) {
+                                        item.saleCurrentTemplate = 'saleShowTemplate';
+                                        self.saleSelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.saleSelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.saleTemplateToUse = function (item) {
+                        return self.saleSelectedItem() === item && item.saleCurrentTemplate === 'saleEditTemplate' ? 'saleEditTemplate' :
+                            self.saleSelectedItem() === item && item.saleCurrentTemplate === 'saleAddTemplate' ? 'saleAddTemplate' : 'saleShowTemplate';
+                    };
+                    self.salePreviousPage = function () {
+                        if (self.salePageIndex() > 0) {
+                            self.salePageIndex(self.salePageIndex() - 1);
+                        }
+                    };
+                    self.saleNextPage = function () {
+                        if (self.salePageIndex() < self.saleMaxPageIndex()) {
+                            self.salePageIndex(self.salePageIndex() + 1);
+                        }
+                    };
+                    self.saleMoveToPage = function (index) {
+                        self.salePageIndex(index);
+                    };
+
+                    self.doneLoading = 0;
+                    self.lastArray = [];
+                    self.checkIfDone = function () {
+                        if (++self.doneLoading == 4) {
+                            self.sales(self.lastArray);
+                            self.doneLoading = 0;
+                            $('.showActionsAfterLoad').show();
+                        }
+                    }
+
+                    $.get('/api/Salesmen', function (data, status) {
+                        self.saleSalesmen($.map(data, function (item) {
+                            return new Salesman(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Customers', function (data, status) {
+                        self.saleCustomers($.map(data, function (item) {
+                            return new Customer(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Cars', function (data, status) {
+                        self.saleCars($.map(data, function (item) {
+                            return new Car(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Sales', function (data, status) {
+                        self.lastArray = $.map(data, function (item) {
+                            return new Sale(item);
+                        });
+                        self.checkIfDone();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var salesViewModel = new SalesViewModel();
+
+                ko.applyBindings(salesViewModel, document.getElementById('main'));
+            }
+
+            function AccessoryCategoriesPage() {
+                function AccessoryCategoriesViewModel() {
+                    var self = this;
+                    self.categories = ko.observableArray();
+                    self.categoryPageSize = ko.observable(5);
+                    self.categoryPageIndex = ko.observable(0);
+                    self.categorySelectedItem = ko.observable();
+                    self.categoryOldItem = {};
+                    self.categoryPagedList = ko.dependentObservable(function () {
+                        var size = self.categoryPageSize();
+                        var start = self.categoryPageIndex() * size;
+                        return self.categories.slice(start, start + size);
+                    });
+                    self.categoryMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.categories().length / self.categoryPageSize()) - 1;
+                    });
+                    self.categoryAllPages = ko.dependentObservable(function () {
+                        var categoryPages = [];
+                        for (i = 0; i <= self.categoryMaxPageIndex() ; i++) {
+                            categoryPages.push({ categoryPageNumber: (i + 1) });
+                        }
+                        return categoryPages;
+                    });
+                    self.categoryEdit = function (item) {
+                        item.categoryCurrentTemplate = 'categoryEditTemplate';
+                        self.categoryOldItem.Name = item.categoryName();
+                        self.categorySelectedItem(item);
+                    };
+                    self.categoryCancelEdit = function (item) {
+                        self.categorySelectedItem().categoryCurrentTemplate = 'categoryShowTemplate';
+                        self.categorySelectedItem().categoryName(self.categoryOldItem.Name);
+                        self.categoryOldItem = {};
+                        self.categorySelectedItem(null);
+                    };
+                    self.categoryCancelAdd = function (item) {
+                        self.categorySelectedItem().categoryCurrentTemplate = 'categoryShowTemplate';
+                        self.categorySelectedItem(null);
+                        self.categories.remove(item);
+                    };
+                    self.categoryAdd = function () {
+                        var newItem = new AccessoryCategory();
+                        newItem.categoryID(9999);
+                        newItem.categoryCurrentTemplate = 'categoryAddTemplate';
+                        self.categories.push(newItem);
+                        self.categorySelectedItem(newItem);
+                        self.categoryMoveToPage(self.categoryMaxPageIndex());
+                    };
+                    self.categoryRemove = function (item) {
+                        if (item.categoryID()) {
+                            if (confirm('Are you sure you wish to delete this accessory category?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/AccessoryCategories/' + item.categoryID(), success:
+                                        function (result) {
+                                            self.categories.remove(item);
+                                            if (self.categoryPageIndex() > self.categoryMaxPageIndex()) {
+                                                self.categoryMoveToPage(self.categoryMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.categories.remove(item);
+                            if (self.categoryPageIndex() > self.categoryMaxPageIndex()) {
+                                self.categoryMoveToPage(self.categoryMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.categorySaveAdd = function () {
+                        if (self.categorySelectedItem().errors().length === 0) {
+                            var item = self.categorySelectedItem();
+                            var dataItem = {
+                                ID: item.categoryID(), Name: item.categoryName()
+                            };
+                            $.post('/api/AccessoryCategories', dataItem, function (result) {
+                                item.categoryID(result.ID);
+                                item.categoryCurrentTemplate = null;
+                                self.categorySelectedItem(null);
+                            });
+                        } else {
+                            self.categorySelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.categorySaveEdit = function () {
+                        if (self.categorySelectedItem().errors().length === 0) {
+                            var item = self.categorySelectedItem();
+                            var dataItem = {
+                                ID: item.categoryID(), Name: item.categoryName()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/AccessoryCategories/' + item.categoryID(), data: dataItem, success:
+                                    function (result) {
+                                        item.categoryCurrentTemplate = 'categoryShowTemplate';
+                                        self.categorySelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.categorySelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.categoryTemplateToUse = function (item) {
+                        return self.categorySelectedItem() === item && item.categoryCurrentTemplate === 'categoryEditTemplate' ? 'categoryEditTemplate' :
+                            self.categorySelectedItem() === item && item.categoryCurrentTemplate === 'categoryAddTemplate' ? 'categoryAddTemplate' : 'categoryShowTemplate';
+                    };
+                    self.categoryPreviousPage = function () {
+                        if (self.categoryPageIndex() > 0) {
+                            self.categoryPageIndex(self.categoryPageIndex() - 1);
+                        }
+                    };
+                    self.categoryNextPage = function () {
+                        if (self.categoryPageIndex() < self.categoryMaxPageIndex()) {
+                            self.categoryPageIndex(self.categoryPageIndex() + 1);
+                        }
+                    };
+                    self.categoryMoveToPage = function (index) {
+                        self.categoryPageIndex(index);
+                    };
+
+                    $.get('/api/AccessoryCategories', function (data, status) {
+                        self.categories($.map(data, function (item) {
+                            return new AccessoryCategory(item);
+                        }));
+                        $('.showActionsAfterLoad').show();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var accessoryCategoriesViewModel = new AccessoryCategoriesViewModel();
+
+                ko.applyBindings(accessoryCategoriesViewModel, document.getElementById('main'));
+            }
+
+            function AccessoriesPage() {
+                function AccessoriesViewModel() {
+                    var self = this;
+                    self.accessories = ko.observableArray();
+                    self.accessoryCategories = ko.observableArray();
+                    self.accessoryPageSize = ko.observable(5);
+                    self.accessoryPageIndex = ko.observable(0);
+                    self.accessorySelectedItem = ko.observable();
+                    self.accessoryOldItem = {};
+                    self.getAccessoryCategoryByID = function (categoryID) {
+                        for (var i = 0; i < self.accessoryCategories().length; i++) {
+                            if (self.accessoryCategories()[i].categoryID() == categoryID()) {
+                                return self.accessoryCategories()[i];
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.accessoryPagedList = ko.dependentObservable(function () {
+                        var size = self.accessoryPageSize();
+                        var start = self.accessoryPageIndex() * size;
+                        return self.accessories.slice(start, start + size);
+                    });
+                    self.accessoryMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.accessories().length / self.accessoryPageSize()) - 1;
+                    });
+                    self.accessoryAllPages = ko.dependentObservable(function () {
+                        var accessoryPages = [];
+                        for (i = 0; i <= self.accessoryMaxPageIndex() ; i++) {
+                            accessoryPages.push({ accessoryPageNumber: (i + 1) });
+                        }
+                        return accessoryPages;
+                    });
+                    self.accessoryEdit = function (item) {
+                        item.accessoryCurrentTemplate = 'accessoryEditTemplate';
+                        self.accessoryOldItem.AccessoryCategoryID = item.accessoryCategoryID();
+                        self.accessoryOldItem.Name = item.accessoryName();
+                        self.accessoryOldItem.GroupName = item.accessoryGroupName();
+                        self.accessoryOldItem.Price = item.accessoryPrice();
+                        self.accessorySelectedItem(item);
+                    };
+                    self.accessoryCancelEdit = function (item) {
+                        self.accessorySelectedItem().accessoryCurrentTemplate = 'accessoryShowTemplate';
+                        self.accessorySelectedItem().accessoryCategoryID(self.accessoryOldItem.AccessoryCategoryID);
+                        self.accessorySelectedItem().accessoryName(self.accessoryOldItem.Name);
+                        self.accessorySelectedItem().accessoryGroupName(self.accessoryOldItem.GroupName);
+                        self.accessorySelectedItem().accessoryPrice(self.accessoryOldItem.Price);
+                        self.accessoryOldItem = {};
+                        self.accessorySelectedItem(null);
+                    };
+                    self.accessoryCancelAdd = function (item) {
+                        self.accessorySelectedItem().accessoryCurrentTemplate = 'accessoryShowTemplate';
+                        self.accessorySelectedItem(null);
+                        self.accessorys.remove(item);
+                    };
+                    self.accessoryAdd = function () {
+                        var newItem = new Accessory();
+                        newItem.accessoryID(9999);
+                        newItem.accessoryCurrentTemplate = 'accessoryAddTemplate';
+                        self.accessories.push(newItem);
+                        self.accessorySelectedItem(newItem);
+                        self.accessoryMoveToPage(self.accessoryMaxPageIndex());
+                    };
+                    self.accessoryRemove = function (item) {
+                        if (item.accessoryID()) {
+                            if (confirm('Are you sure you wish to delete this accessory?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/Accessories/' + item.accessoryID(), success:
+                                        function (result) {
+                                            self.accessories.remove(item);
+                                            if (self.accessoryPageIndex() > self.accessoryMaxPageIndex()) {
+                                                self.accessoryMoveToPage(self.accessoryMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.accessories.remove(item);
+                            if (self.accessoryPageIndex() > self.accessoryMaxPageIndex()) {
+                                self.accessoryMoveToPage(self.accessoryMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.accessorySaveAdd = function () {
+                        if (self.accessorySelectedItem().errors().length === 0) {
+                            var item = self.accessorySelectedItem();
+                            var dataItem = {
+                                ID: item.accessoryID(), Name: item.accessoryName(), AccessoryCategoryID: item.accessoryCategoryID(), GroupName: item.accessoryGroupName(),
+                                Price: item.accessoryPrice()
+                            };
+                            $.post('/api/Accessories', dataItem, function (result) {
+                                item.accessoryID(result.ID);
+                                item.accessoryCurrentTemplate = null;
+                                self.accessorySelectedItem(null);
+                            });
+                        } else {
+                            self.accessorySelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.accessorySaveEdit = function () {
+                        if (self.accessorySelectedItem().errors().length === 0) {
+                            var item = self.accessorySelectedItem();
+                            var dataItem = {
+                                ID: item.accessoryID(), Name: item.accessoryName(), AccessoryCategoryID: item.accessoryCategoryID(), GroupName: item.accessoryGroupName(),
+                                Price: item.accessoryPrice()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/Accessories/' + item.accessoryID(), data: dataItem, success:
+                                    function (result) {
+                                        item.accessoryCurrentTemplate = 'accessoryShowTemplate';
+                                        self.accessorySelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.accessorySelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.accessoryTemplateToUse = function (item) {
+                        return self.accessorySelectedItem() === item && item.accessoryCurrentTemplate === 'accessoryEditTemplate' ? 'accessoryEditTemplate' :
+                            self.accessorySelectedItem() === item && item.accessoryCurrentTemplate === 'accessoryAddTemplate' ? 'accessoryAddTemplate' : 'accessoryShowTemplate';
+                    };
+                    self.accessoryPreviousPage = function () {
+                        if (self.accessoryPageIndex() > 0) {
+                            self.accessoryPageIndex(self.accessoryPageIndex() - 1);
+                        }
+                    };
+                    self.accessoryNextPage = function () {
+                        if (self.accessoryPageIndex() < self.accessoryMaxPageIndex()) {
+                            self.accessoryPageIndex(self.accessoryPageIndex() + 1);
+                        }
+                    };
+                    self.accessoryMoveToPage = function (index) {
+                        self.accessoryPageIndex(index);
+                    };
+
+                    self.doneLoading = 0;
+                    self.lastArray = [];
+                    self.checkIfDone = function () {
+                        if (++self.doneLoading == 2) {
+                            self.accessories(self.lastArray);
+                            self.doneLoading = 0;
+                            $('.showActionsAfterLoad').show();
+                        }
+                    }
+
+                    $.get('/api/AccessoryCategories', function (data, status) {
+                        self.accessoryCategories($.map(data, function (item) {
+                            return new AccessoryCategory(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Accessories', function (data, status) {
+                        self.lastArray = $.map(data, function (item) {
+                            return new Accessory(item);
+                        });
+                        self.checkIfDone();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var accessoriesViewModel = new AccessoriesViewModel();
+
+                ko.applyBindings(accessoriesViewModel, document.getElementById('main'));
+            }
+
+            function SaleAccessoriesPage() {
+                function SaleAccessoriesViewModel() {
+                    var self = this;
+                    self.saleAccessories = ko.observableArray();
+                    self.saleAccessorySales = ko.observableArray();
+                    self.saleAccessorySalesmen = ko.observableArray();
+                    self.saleAccessoryCustomers = ko.observableArray();
+                    self.saleAccessoryAccessories = ko.observableArray();
+                    self.saleAccessoryAccessoryGroups = ko.observableArray();
+                    self.saleAccessoryPageSize = ko.observable(5);
+                    self.saleAccessoryPageIndex = ko.observable(0);
+                    self.saleAccessorySelectedItem = ko.observable();
+                    self.saleAccessoryOldItem = {};
+                    self.getSaleAccessoryExclusiveAccessories = function (item) {
+                        alert(JSON.stringify(item));
+                    }
+                    self.getSaleAccessorySalesmanBySaleID = function (saleID) {
+                        if (saleID()) {
+                            for (var i = 0; i < self.saleAccessorySales().length; i++) {
+                                if (self.saleAccessorySales()[i].saleID() == saleID()) {
+                                    for (var x = 0; x < self.saleAccessorySalesmen().length; x++) {
+                                        if (self.saleAccessorySalesmen()[x].salesmanID() == self.saleAccessorySales()[i].saleSalesmanID()) {
+                                            return self.saleAccessorySalesmen()[x];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getSaleAccessoryCustomerBySaleID = function (saleID) {
+                        if (saleID()) {
+                            for (var i = 0; i < self.saleAccessorySales().length; i++) {
+                                if (self.saleAccessorySales()[i].saleID() == saleID()) {
+                                    for (var x = 0; x < self.saleAccessoryCustomers().length; x++) {
+                                        if (self.saleAccessoryCustomers()[x].customerID() == self.saleAccessorySales()[i].saleCustomerID()) {
+                                            return self.saleAccessoryCustomers()[x];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getSaleAccessorySaleSaleDateBySaleID = function (saleID) {
+                        if (saleID()) {
+                            for (var i = 0; i < self.saleAccessorySales().length; i++) {
+                                var sale = self.saleAccessorySales()[i];
+                                if (sale.saleID() == saleID()) {
+                                    var saleDate = new Date(sale.saleSaleDate());
+                                    return (saleDate.getMonth() + 1) + '/' + saleDate.getDate() + '/' + saleDate.getFullYear();
+                                }
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getSaleAccessoryAccessoryByAccessoryID = function (accessoryID) {
+                        for (var i = 0; i < self.saleAccessoryAccessories().length; i++) {
+                            if (self.saleAccessoryAccessories()[i].accessoryID() == accessoryID()) {
+                                return self.saleAccessoryAccessories()[i];
+                            }
+                        }
+                        return 'undefined';
+                    }
+                    self.getSaleAccessorySaleDisplayValue = function (sale) {
+                        var salesman = self.getSaleAccessorySalesmanBySaleID(sale.saleID);
+                        var customer = self.getSaleAccessoryCustomerBySaleID(sale.saleID);
+                        var saleDate = new Date(sale.saleSaleDate());
+                        return salesman.salesmanName() + ' sold ' + customer.customerName() + ' a vehicle on ' + (saleDate.getMonth() + 1) + '/' + saleDate.getDate() + '/' + saleDate.getFullYear();
+                    }
+                    self.getSaleAccessoryExclusiveAccessories = function (item) {
+                        var accessory = self.getSaleAccessoryAccessoryByAccessoryID(item.saleAccessoryAccessoryID);
+                        self.saleAccessoryAccessoryGroups($.map(self.saleAccessoryAccessories(), function (a) {
+                            if (accessory.accessoryGroupName() && accessory.accessoryGroupName().length && a.accessoryGroupName() == accessory.accessoryGroupName()) {
+                                return a;
+                            }
+                        }));
+                    }
+                    self.saleAccessoryPagedList = ko.dependentObservable(function () {
+                        var size = self.saleAccessoryPageSize();
+                        var start = self.saleAccessoryPageIndex() * size;
+                        return self.saleAccessories.slice(start, start + size);
+                    });
+                    self.saleAccessoryMaxPageIndex = ko.dependentObservable(function () {
+                        return Math.ceil(self.saleAccessories().length / self.saleAccessoryPageSize()) - 1;
+                    });
+                    self.saleAccessoryAllPages = ko.dependentObservable(function () {
+                        var saleAccessoryPages = [];
+                        for (i = 0; i <= self.saleAccessoryMaxPageIndex() ; i++) {
+                            saleAccessoryPages.push({ saleAccessoryPageNumber: (i + 1) });
+                        }
+                        return saleAccessoryPages;
+                    });
+                    self.saleAccessoryEdit = function (item) {
+                        item.saleAccessoryCurrentTemplate = 'saleAccessoryEditTemplate';
+                        self.saleAccessoryOldItem.SaleID = item.saleAccessorySaleID();
+                        self.saleAccessoryOldItem.AccessoryID = item.saleAccessoryAccessoryID();
+                        self.saleAccessoryOldItem.Price = item.saleAccessoryPrice();
+                        self.getSaleAccessoryExclusiveAccessories(item);
+                        self.saleAccessorySelectedItem(item);
+                    };
+                    self.saleAccessoryCancelEdit = function (item) {
+                        self.saleAccessorySelectedItem().saleAccessoryCurrentTemplate = 'saleAccessoryShowTemplate';
+                        self.saleAccessorySelectedItem().saleAccessorySaleID(self.saleAccessoryOldItem.SaleID);
+                        self.saleAccessorySelectedItem().saleAccessoryAccessoryID(self.saleAccessoryOldItem.AccessoryID);
+                        self.saleAccessorySelectedItem().saleAccessoryPrice(self.saleAccessoryOldItem.Price);
+                        self.saleAccessoryOldItem = {};
+                        self.saleAccessorySelectedItem(null);
+                    };
+                    self.saleAccessoryCancelAdd = function (item) {
+                        self.saleAccessorySelectedItem().saleAccessoryCurrentTemplate = 'saleAccessoryShowTemplate';
+                        self.saleAccessorySelectedItem(null);
+                        self.saleAccessorys.remove(item);
+                    };
+                    self.saleAccessoryAdd = function () {
+                        var newItem = new SaleAccessory();
+                        newItem.saleAccessoryID(9999);
+                        newItem.saleAccessoryCurrentTemplate = 'saleAccessoryAddTemplate';
+                        self.saleAccessories.push(newItem);
+                        self.saleAccessorySelectedItem(newItem);
+                        self.saleAccessoryMoveToPage(self.saleAccessoryMaxPageIndex());
+                    };
+                    self.saleAccessoryRemove = function (item) {
+                        if (item.saleAccessoryID()) {
+                            if (confirm('Are you sure you wish to delete this sale accessory?')) {
+                                $.ajax({
+                                    type: 'DELETE', url: '/api/SaleAccessories/' + item.saleAccessoryID(), success:
+                                        function (result) {
+                                            self.saleAccessories.remove(item);
+                                            if (self.saleAccessoryPageIndex() > self.saleAccessoryMaxPageIndex()) {
+                                                self.saleAccessoryMoveToPage(self.saleAccessoryMaxPageIndex());
+                                            }
+                                        }
+                                });
+                            }
+                        }
+                        else {
+                            self.saleAccessories.remove(item);
+                            if (self.saleAccessoryPageIndex() > self.saleAccessoryMaxPageIndex()) {
+                                self.saleAccessoryMoveToPage(self.saleAccessoryMaxPageIndex());
+                            }
+                        }
+                    };
+                    self.saleAccessorySaveAdd = function () {
+                        if (self.saleAccessorySelectedItem().errors().length === 0) {
+                            var item = self.saleAccessorySelectedItem();
+                            var dataItem = {
+                                ID: item.saleAccessoryID(), SaleID: item.saleAccessorySaleID(), AccessoryID: item.saleAccessoryAccessoryID(),
+                                Price: item.saleAccessoryPrice()
+                            };
+                            $.post('/api/SaleAccessories', dataItem, function (result) {
+                                item.saleAccessoryID(result.ID);
+                                item.saleAccessoryCurrentTemplate = null;
+                                self.saleAccessorySelectedItem(null);
+                            });
+                        } else {
+                            self.saleAccessorySelectedItem().errors.showAllMessages();
+                        }
+                    };
+                    self.saleAccessorySaveEdit = function () {
+                        if (self.saleAccessorySelectedItem().errors().length === 0) {
+                            var item = self.saleAccessorySelectedItem();
+                            var dataItem = {
+                                ID: item.saleAccessoryID(), SaleID: item.saleAccessorySaleID(), AccessoryID: item.saleAccessoryAccessoryID(),
+                                Price: item.saleAccessoryPrice()
+                            };
+                            $.ajax({
+                                type: 'PUT', url: '/api/SaleAccessories/' + item.saleAccessoryID(), data: dataItem, success:
+                                    function (result) {
+                                        item.saleAccessoryCurrentTemplate = 'saleAccessoryShowTemplate';
+                                        self.saleAccessorySelectedItem(null);
+                                    }
+                            });
+                        } else {
+                            self.saleAccessorySelectedItem().errors.showAllMessages();
+                        }
+                    }
+                    self.saleAccessoryTemplateToUse = function (item) {
+                        return self.saleAccessorySelectedItem() === item && item.saleAccessoryCurrentTemplate === 'saleAccessoryEditTemplate' ? 'saleAccessoryEditTemplate' :
+                            self.saleAccessorySelectedItem() === item && item.saleAccessoryCurrentTemplate === 'saleAccessoryAddTemplate' ? 'saleAccessoryAddTemplate' : 'saleAccessoryShowTemplate';
+                    };
+                    self.saleAccessoryPreviousPage = function () {
+                        if (self.saleAccessoryPageIndex() > 0) {
+                            self.saleAccessoryPageIndex(self.saleAccessoryPageIndex() - 1);
+                        }
+                    };
+                    self.saleAccessoryNextPage = function () {
+                        if (self.saleAccessoryPageIndex() < self.saleAccessoryMaxPageIndex()) {
+                            self.saleAccessoryPageIndex(self.saleAccessoryPageIndex() + 1);
+                        }
+                    };
+                    self.saleAccessoryMoveToPage = function (index) {
+                        self.saleAccessoryPageIndex(index);
+                    };
+
+                    self.doneLoading = 0;
+                    self.lastArray = [];
+                    self.checkIfDone = function () {
+                        if (++self.doneLoading == 5) {
+                            self.saleAccessories(self.lastArray);
+                            self.doneLoading = 0;
+                            $('.showActionsAfterLoad').show();
+                        }
+                    }
+
+                    $.get('/api/Sales', function (data, status) {
+                        self.saleAccessorySales($.map(data, function (item) {
+                            return new Sale(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Salesmen', function (data, status) {
+                        self.saleAccessorySalesmen($.map(data, function (item) {
+                            return new Salesman(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Customers', function (data, status) {
+                        self.saleAccessoryCustomers($.map(data, function (item) {
+                            return new Customer(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/Accessories', function (data, status) {
+                        self.saleAccessoryAccessories($.map(data, function (item) {
+                            return new Accessory(item);
+                        }));
+                        self.checkIfDone();
+                    });
+                    $.get('/api/SaleAccessories', function (data, status) {
+                        self.lastArray = $.map(data, function (item) {
+                            return new SaleAccessory(item);
+                        });
+                        self.checkIfDone();
+                    });
+                }
+
+                ko.validation.init({
+                    registerExtenders: true,
+                    messagesOnModified: true,
+                    insertMessages: true,
+                    parseInputAttributes: true,
+                    messageTemplate: null
+                }, true);
+
+                var saleAccessoriesViewModel = new SaleAccessoriesViewModel();
+
+                ko.applyBindings(saleAccessoriesViewModel, document.getElementById('main'));
+            }
+
+            Sammy(function () {
+                this.get('#CarStockPage', function () {
+                    toggleSPAPage('CarStockPage', 'main');
+                });
+                this.get('#SalesmenPage', function () {
+                    toggleSPAPage('SalesmanPage', 'main');
+                });
+                this.get('#CustomersPage', function () {
+                    toggleSPAPage('CustomerPage', 'main');
+                });
+                this.get('#SalesPage', function () {
+                    toggleSPAPage('SalesPage', 'main');
+                });
+                this.get('#AccessoryCategoriesPage', function () {
+                    toggleSPAPage('AccessoryCategoriesPage', 'main');
+                });
+                this.get('#AccessoriesPage', function () {
+                    toggleSPAPage('AccessoriesPage', 'main');
+                });
+                this.get('#SaleAccessoriesPage', function () {
+                    toggleSPAPage('SaleAccessoriesPage', 'main');
+                });
+                this.get('', function () {
+                    toggleSPAPage('HomePage', 'main');
+                });
+            }).run();
+
+            $('#copyrightYear').html((new Date()).getFullYear().toString());
+        });
+    </script>
+    <style type="text/css">
+        .txtboxStyle {
+            padding: 3px;
+            font-size: 16px;
+            border-style: solid;
+            border-radius: 5px;
+            border-color: #ebebeb;
+            color: #7a7a7a;
+            border-width: 1px;
+        }
+
+        .validationMessage {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="jumbotron page-header" style="background-color: black; color: white">
+            <table>
+                <tr>
+                    <td>
+                        <img src="Images/audi.png" height="150" />
+                    </td>
+                    <td>
+                        <h1>&nbsp;&nbsp;&nbsp;&nbsp;Star Cars</h1>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <nav class="navbar navbar-inverse">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#">Star Cars</a>
+                    </div>
+                    <div>
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="#">Home</a></li>
+                            <li><a href="#CarStockPage">Cars in Stock</a></li>
+                            <li><a href="#SalesmenPage">Salesmen</a></li>
+                            <li><a href="#CustomersPage">Customers</a></li>
+                            <li><a href="#SalesPage">Sales</a></li>
+                            <li><a href="#AccessoryCategoriesPage">Accessory Categories</a></li>
+                            <li><a href="#AccessoriesPage">Accessories</a></li>
+                            <li><a href="#SaleAccessoriesPage">Accessories Sales</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div id="main">
+        </div>
+        <footer>
+            <p>&copy; <span id="copyrightYear"></span> - <a href="">Akshay Srinivasan</a></p>
+        </footer>
+    </div>
+    <script id="HomePage" type="text/html">
+        <h1>Home Page Under Construction</h1>
+    </script>
+    <script id="CarStockPage" type="text/html">
+        <div>
+            <h2>Cars In Stock</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.carStockAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Car to Stock</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Image</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: carStockTemplateToUse, foreach: carStockPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: carStockPageIndex() === 0 }">
+                    <a href="#" data-bind="click: carStockPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: carStockAllPages">
+                <li data-bind="css: { active: $data.carStockPageNumber === ($root.carStockPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.carStockPageNumber, click: function () { $root.carStockMoveToPage($data.carStockPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: carStockPageIndex() === carStockMaxPageIndex() }">
+                    <a href="#" data-bind="click: carStockNextPage">Next</a>
+                </li>
+            </ul>
+            <p>
+                <button class="btn btn-default" data-bind="click: carStockIncreasePrices">Increase Prices</button>
+            </p>
+        </div>
+    </script>
+    <script id="carStockShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: carStockID"></td>
+            <td data-bind="text: carStockName"></td>
+            <td data-bind="text: 'Rs.' + carStockPrice()"></td>
+            <td data-bind="text: carStockQuantity"></td>
+            <td><img src="Images/orderedList0.png" data-bind="attr: { src: $data.carStockImage() }" /></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.carStockEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.carStockRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="carStockEditTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: carStockID" />
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockName" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockPrice" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockQuantity" />
+            </td>
+            <td>
+                <input data-bind="event: { change: carStockFileUpload }" type="file" accept="image/*" class="fileChooser" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.carStockSaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.carStockCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="carStockAddTemplate" type="text/html">
+        <tr>
+            <td></td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockName" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockPrice" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: carStockQuantity" />
+            </td>
+            <td>
+                <input data-bind="event: { change: $data.carStockFileUpload }" type="file" accept="image/*" class="fileChooser" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.carStockSaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.carStockCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="SalesmanPage" type="text/html">
+        <div>
+            <h2>Salesmen</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.salesmanAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Salesman</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Cell Number</th>
+                        <th>Email Address</th>
+                        <th>Commission Percentage</th>
+                        <th>Joined (MM/DD/YYYY)</th>
+                        <th>Resigned (MM/DD/YYYY)</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: salesmanTemplateToUse, foreach: salesmanPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: salesmanPageIndex() === 0 }">
+                    <a href="#" data-bind="click: salesmanPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: salesmanAllPages">
+                <li data-bind="css: { active: $data.salesmanPageNumber === ($root.salesmanPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.salesmanPageNumber, click: function () { $root.salesmanMoveToPage($data.salesmanPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: salesmanPageIndex() === salesmanMaxPageIndex() }">
+                    <a href="#" data-bind="click: salesmanNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="salesmanShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: salesmanID"></td>
+            <td data-bind="text: salesmanName"></td>
+            <td data-bind="text: salesmanCellNumber"></td>
+            <td data-bind="text: salesmanEmailAddress"></td>
+            <td data-bind="text: salesmanCommissionPercentage"></td>
+            <td data-bind="text: (new Date(salesmanJoined()).getMonth() + 1) + '/' + new Date(salesmanJoined()).getDate() + '/' + new Date(salesmanJoined()).getFullYear()"></td>
+            <td data-bind="text: new Date(salesmanResigned()) > new Date() ? 'Not Resigned' : (new Date(salesmanResigned()).getMonth() + 1) + '/' + (new Date(salesmanResigned())).getDate() + '/' + (new Date(salesmanResigned())).getFullYear()"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.salesmanEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.salesmanRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="salesmanEditTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: salesmanID" />
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanName" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanCellNumber" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanEmailAddress" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanCommissionPercentage" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanJoined" type="date" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanResigned" type="date" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.salesmanSaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.salesmanCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="salesmanAddTemplate" type="text/html">
+        <tr>
+            <td></td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanName" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanCellNumber" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanEmailAddress" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanCommissionPercentage" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanJoined" type="date" />
+            </td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: salesmanResigned" type="date" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.salesmanSaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.salesmanCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="CustomerPage" type="text/html">
+        <div>
+            <h2>Customers</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.customerAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Customer</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Country</th>
+                        <th>Zip Code</th>
+                        <th>Cellphone Number</th>
+                        <th>Email Address</th>
+                        <th>Added On (MM/DD/YYYY)</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: customerTemplateToUse, foreach: customerPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: customerPageIndex() === 0 }">
+                    <a href="#" data-bind="click: customerPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: customerAllPages">
+                <li data-bind="css: { active: $data.customerPageNumber === ($root.customerPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.customerPageNumber, click: function () { $root.customerMoveToPage($data.customerPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: customerPageIndex() === customerMaxPageIndex() }">
+                    <a href="#" data-bind="click: customerNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="customerShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: customerID"></td>
+            <td data-bind="text: customerName"></td>
+            <td data-bind="text: customerAddress"></td>
+            <td data-bind="text: customerCity"></td>
+            <td data-bind="text: customerState"></td>
+            <td data-bind="text: customerCountry"></td>
+            <td data-bind="text: customerZipCode"></td>
+            <td data-bind="text: customerCellNumber"></td>
+            <td data-bind="text: customerEmailAddress"></td>
+            <td data-bind="text: ((new Date(customerAddedOn())).getMonth() + 1) + '/' + (new Date(customerAddedOn())).getDate() + '/' + (new Date(customerAddedOn())).getFullYear()"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.customerEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.customerRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="customerEditTemplate" type="text/html">
+        <tr>
+            <td colspan="10">
+                <table style="width:100%">
+                    <tr>
+                        <th style="width:150px">ID:</th>
+                        <td data-bind="text: customerID" />
+                    </tr>
+                    <tr>
+                        <th>Name:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerName" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Address:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerAddress" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>City:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCity" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>State:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerState" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Country:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCountry" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Zip Code:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerZipCode" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Cellphone Number:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCellNumber" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Email Address:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerEmailAddress" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Added On:</th>
+                        <td>
+                            <input class="txtboxStyle" data-bind="value: customerAddedOn" type="date" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success" data-bind="click: $root.customerSaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger" data-bind="click: $root.customerCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+    <script id="customerAddTemplate" type="text/html">
+        <tr>
+            <td colspan="10">
+                <table style="width:100%">
+                    <tr>
+                        <th style="width:150px">Name:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerName" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Address:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerAddress" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>City:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCity" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>State:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerState" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Country:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCountry" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Zip Code:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerZipCode" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Cellphone Number:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerCellNumber" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Email Address:</th>
+                        <td><input class="txtboxStyle" data-bind="value: customerEmailAddress" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Added On:</th>
+                        <td>
+                            <input class="txtboxStyle" data-bind="value: customerAddedOn" type="date" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success" data-bind="click: $root.customerSaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger" data-bind="click: $root.customerCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+
+    <script id="SalesPage" type="text/html">
+        <div>
+            <h2>Sales</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.saleAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Sale</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Salesman Name</th>
+                        <th>Customer Name</th>
+                        <th>Customer Cell Number</th>
+                        <th>Customer Email Address</th>
+                        <th>Car Name</th>
+                        <th>Price</th>
+                        <th>Sale Date (MM/DD/YYYY)</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: saleTemplateToUse, foreach: salePagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: salePageIndex() === 0 }">
+                    <a href="#" data-bind="click: salePreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: saleAllPages">
+                <li data-bind="css: { active: $data.salePageNumber === ($root.salePageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.salePageNumber, click: function () { $root.saleMoveToPage($data.salePageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: salePageIndex() === saleMaxPageIndex() }">
+                    <a href="#" data-bind="click: saleNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="saleShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: saleID"></td>
+            <td data-bind="text: $root.getSalesmanByID($data.saleSalesmanID).salesmanName"></td>
+            <td data-bind="text: $root.getCustomerByID($data.saleCustomerID).customerName"></td>
+            <td data-bind="text: $root.getCustomerByID($data.saleCustomerID).customerCellNumber"></td>
+            <td data-bind="text: $root.getCustomerByID($data.saleCustomerID).customerEmailAddress"></td>
+            <td data-bind="text: $root.getCarByID($data.saleCarID).carStockName"></td>
+            <td data-bind="text: 'Rs.' + salePrice()"></td>
+            <td data-bind="text: (new Date(saleSaleDate()).getMonth() + 1) + '/' + (new Date(saleSaleDate())).getDate() + '/' + (new Date(saleSaleDate())).getFullYear()"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.saleEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.saleRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="saleEditTemplate" type="text/html">
+        <tr>
+            <td colspan="9">
+                <table style="width:100%">
+                    <tr>
+                        <th style="width:150px">ID:</th>
+                        <td data-bind="text: saleID" />
+                    </tr>
+                    <tr>
+                        <th>Salesman:</th>
+                        <td><select data-bind="options: $root.saleSalesmen, optionsText: $root.getSalesmanDisplayValue, optionsValue: 'salesmanID', value: $data.saleSalesmanID" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Customer:</th>
+                        <td><select data-bind="options: $root.saleCustomers, optionsText: $root.getCustomerDispayValue, optionsValue: 'customerID', value: $data.saleCustomerID" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Car:</th>
+                        <td><select data-bind="options: $root.saleCars, optionsText: 'carStockName', optionsValue: 'carStockID', value: $data.saleCarID" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td><input class="txtboxStyle" data-bind="value: salePrice" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Sale Date:</th>
+                        <td><input class="txtboxStyle" data-bind="value: saleSaleDate" type="date" /></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success" data-bind="click: $root.saleSaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger" data-bind="click: $root.saleCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+    <script id="saleAddTemplate" type="text/html">
+        <tr>
+            <td colspan="9">
+                <table style="width:100%">
+                    <tr>
+                        <th>Salesman:</th>
+                        <td><select data-bind="options: $root.saleSalesmen, optionsText: $root.getSalesmanDisplayValue, optionsValue: 'salesmanID', value: saleSalesmanID, optionsCaption: 'Select a Salesman.'" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Customer:</th>
+                        <td><select data-bind="options: $root.saleCustomers, optionsText: $root.getCustomerDispayValue, optionsValue: 'customerID', value: saleCustomerID, optionsCaption: 'Select a Customer.'" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Car:</th>
+                        <td><select data-bind="options: $root.saleCars, optionsText: 'carStockName', optionsValue: 'carStockID', value: saleCarID, optionsCaption: 'Select a car model.'" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td><input class="txtboxStyle" data-bind="value: salePrice" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <th>Sale Date:</th>
+                        <td><input class="txtboxStyle" data-bind="value: saleSaleDate" type="date" /></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success" data-bind="click: $root.saleSaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger" data-bind="click: $root.saleCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+
+    <script id="AccessoryCategoriesPage" type="text/html">
+        <div>
+            <h2>Accessory Categories</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.categoryAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Accessory Category</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: categoryTemplateToUse, foreach: categoryPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: categoryPageIndex() === 0 }">
+                    <a href="#" data-bind="click: categoryPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: categoryAllPages">
+                <li data-bind="css: { active: $data.categoryPageNumber === ($root.categoryPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.categoryPageNumber, click: function () { $root.categoryMoveToPage($data.categoryPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: categoryPageIndex() === categoryMaxPageIndex() }">
+                    <a href="#" data-bind="click: categoryNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="categoryShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: categoryID"></td>
+            <td data-bind="text: categoryName"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.categoryEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.categoryRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="categoryEditTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: categoryID" />
+            <td>
+                <input class="txtboxStyle" data-bind="value: categoryName" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.categorySaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.categoryCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="categoryAddTemplate" type="text/html">
+        <tr>
+            <td></td>
+            <td>
+                <input class="txtboxStyle" data-bind="value: categoryName" />
+            </td>
+            <td class="buttons">
+                <a class="btn btn-success" data-bind="click: $root.categorySaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.categoryCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+
+    <script id="AccessoriesPage" type="text/html">
+        <div>
+            <h2>Accessories</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.accessoryAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Accessory</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Group Name</th>
+                        <th>Price</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: accessoryTemplateToUse, foreach: accessoryPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: accessoryPageIndex() === 0 }">
+                    <a href="#" data-bind="click: accessoryPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: accessoryAllPages">
+                <li data-bind="css: { active: $data.accessoryPageNumber === ($root.accessoryPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.accessoryPageNumber, click: function () { $root.accessoryMoveToPage($data.accessoryPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: accessoryPageIndex() === accessoryMaxPageIndex() }">
+                    <a href="#" data-bind="click: accessoryNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="accessoryShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: accessoryID"></td>
+            <td data-bind="text: accessoryName"></td>
+            <td data-bind="text: $root.getAccessoryCategoryByID($data.accessoryCategoryID).categoryName"></td>
+            <td data-bind="text: accessoryGroupName()"></td>
+            <td data-bind="text: 'Rs.' + accessoryPrice()"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.accessoryEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.accessoryRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="accessoryEditTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: accessoryID" />
+            <td><input data-bind="value: accessoryName" style="width:100%" /></td>
+            <td><select data-bind="options: $root.accessoryCategories, optionsText: 'categoryName', optionsValue: 'categoryID', value: $data.accessoryCategoryID, optionsCaption: 'Select an Accessory Category.'" style="width:100%"></select></td>
+            <td><input class="txtboxStyle" data-bind="value: accessoryGroupName" style="width:100%" /></td>
+            <td><input class="txtboxStyle" data-bind="value: accessoryPrice" style="width:100%" /></td>
+            <td>
+                <a class="btn btn-success" data-bind="click: $root.accessorySaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.accessoryCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="accessoryAddTemplate" type="text/html">
+        <tr>
+            <td></td>
+            <td><input data-bind="value: accessoryName" style="width:100%" /></td>
+            <td><select data-bind="options: $root.accessoryCategories, optionsText: 'categoryName', optionsValue: 'categoryID', value: $data.accessoryCategoryID, optionsCaption: 'Select an Accessory Category.'" style="width:100%"></select></td>
+            <td><input class="txtboxStyle" data-bind="value: accessoryGroupName" style="width:100%" /></td>
+            <td><input class="txtboxStyle" data-bind="value: accessoryPrice" style="width:100%" /></td>
+            <td>
+                <a class="btn btn-success" data-bind="click: $root.accessorySaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                <a class="btn btn-danger" data-bind="click: $root.accessoryCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+            </td>
+        </tr>
+    </script>
+
+    <script id="SaleAccessoriesPage" type="text/html">
+        <div>
+            <h2>Accessories Sales</h2>
+            <p>
+                <a class="btn btn-primary showActionsAfterLoad" data-bind="click: $root.saleAccessoryAdd" href="#" title="add"><i class="glyphicon glyphicon-plus"></i>Add Sale Accessory</a>
+            </p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sale ID</th>
+                        <th>Salesman</th>
+                        <th>Customer</th>
+                        <th>Sale Date</th>
+                        <th>Accessory</th>
+                        <th>Price</th>
+                        <th style="width: 100px; text-align: right;" />
+                    </tr>
+                </thead>
+                <tbody data-bind="template: { name: saleAccessoryTemplateToUse, foreach: saleAccessoryPagedList }"></tbody>
+            </table>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: saleAccessoryPageIndex() === 0 }">
+                    <a href="#" data-bind="click: saleAccessoryPreviousPage">Previous</a>
+                </li>
+            </ul>
+            <ul class="pagination" data-bind="foreach: saleAccessoryAllPages">
+                <li data-bind="css: { active: $data.saleAccessoryPageNumber === ($root.saleAccessoryPageIndex() + 1) }">
+                    <a href="#" data-bind="text: $data.saleAccessoryPageNumber, click: function () { $root.saleAccessoryMoveToPage($data.saleAccessoryPageNumber - 1); }"></a>
+                </li>
+
+            </ul>
+            <ul class="pagination">
+                <li data-bind="css: { disabled: saleAccessoryPageIndex() === saleAccessoryMaxPageIndex() }">
+                    <a href="#" data-bind="click: saleAccessoryNextPage">Next</a>
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script id="saleAccessoryShowTemplate" type="text/html">
+        <tr>
+            <td data-bind="text: saleAccessoryID"></td>
+            <td data-bind="text: saleAccessorySaleID"></td>
+            <td data-bind="text: $root.getSaleAccessorySalesmanBySaleID($data.saleAccessorySaleID).salesmanName"></td>
+            <td data-bind="text: $root.getSaleAccessoryCustomerBySaleID($data.saleAccessorySaleID).customerName"></td>
+            <td data-bind="text: $root.getSaleAccessorySaleSaleDateBySaleID($data.saleAccessorySaleID)"></td>
+            <td data-bind="text: $root.getSaleAccessoryAccessoryByAccessoryID($data.saleAccessoryAccessoryID).accessoryName"></td>
+            <td data-bind="text: 'Rs.' + saleAccessoryPrice()"></td>
+            <td class="buttons">
+                <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.saleAccessoryEdit" href="#" title="edit"><i class="glyphicon glyphicon-edit"></i></a>
+                <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.saleAccessoryRemove" href="#" title="remove"><i class="glyphicon glyphicon-remove"></i></a>
+            </td>
+        </tr>
+    </script>
+    <script id="saleAccessoryEditTemplate" type="text/html">
+        <tr>
+            <td colspan="8">
+                <table style="width:100%">
+                    <tr>
+                        <th style="width:150px">ID:</th>
+                        <td data-bind="text: saleAccessoryID" />
+                    </tr>
+                    <tr>
+                        <th>Sale:</th>
+                        <td><select data-bind="options: $root.saleAccessorySales, optionsText: $root.getSaleAccessorySaleDisplayValue, optionsValue: 'saleID', value: $data.saleAccessorySaleID, optionsCaption: 'Select a Sale.'" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Accessory:</th>
+                        <td><select data-bind="options: $root.saleAccessoryAccessories, optionsText: 'accessoryName', optionsValue: 'accessoryID', value: $data.saleAccessoryAccessoryID, optionsCaption: 'Select an Accessory.', event: { change: $root.getSaleAccessoryExclusiveAccessories }" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Accessories in Group:</th>
+                        <td id="saleAccessoryAccessoryGroup" data-bind="foreach: $root.saleAccessoryAccessoryGroups">
+                            <input type="radio" data-bind="checked: $parent.saleAccessoryAccessoryID, checkedValue: accessoryID, attr: { name: accessoryGroupName }" /><span data-bind="text: accessoryName"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td><input class="txtboxStyle" data-bind="value: saleAccessoryPrice" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.saleAccessorySaveEdit" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.saleAccessoryCancelEdit" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+    <script id="saleAccessoryAddTemplate" type="text/html">
+        <tr>
+            <td colspan="8">
+                <table style="width:100%">
+                    <tr>
+                        <th>Sale:</th>
+                        <td><select data-bind="options: $root.saleAccessorySales, optionsText: $root.getSaleAccessorySaleDisplayValue, optionsValue: 'saleID', value: $data.saleAccessorySaleID, optionsCaption: 'Select a Sale.'" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Accessory:</th>
+                        <td><select data-bind="options: $root.saleAccessoryAccessories, optionsText: 'accessoryName', optionsValue: 'accessoryID', value: $data.saleAccessoryAccessoryID, optionsCaption: 'Select an Accessory.', event: { change: $root.getSaleAccessoryExclusiveAccessories }" style="width:100%"></select></td>
+                    </tr>
+                    <tr>
+                        <th>Accessories in Group:</th>
+                        <td id="saleAccessoryAccessoryGroup" data-bind="foreach: $root.saleAccessoryAccessoryGroups">
+                            <input type="radio" data-bind="checked: $parent.saleAccessoryAccessoryID, checkedValue: accessoryID, attr: { name: accessoryGroupName }" /><span data-bind="text: accessoryName"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td><input class="txtboxStyle" data-bind="value: saleAccessoryPrice" style="width:100%" /></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a class="btn btn-success showActionsAfterLoad" data-bind="click: $root.saleAccessorySaveAdd" href="#" title="save"><i class="glyphicon glyphicon-ok"></i></a>
+                            <a class="btn btn-danger showActionsAfterLoad" data-bind="click: $root.saleAccessoryCancelAdd" href="#" title="cancel"><i class="glyphicon glyphicon-trash"></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </script>
+</body>
+</html>
